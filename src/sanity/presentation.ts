@@ -8,6 +8,7 @@ export const presentation = presentationTool({
 	name: 'editor',
 	title: 'Editor',
 	previewUrl: {
+                origin: 'http://localhost:3000', 
 		previewMode: {
 			enable: '/api/draft-mode/enable',
 		},

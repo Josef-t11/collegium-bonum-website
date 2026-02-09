@@ -1,6 +1,7 @@
+// src/sanity/schemaTypes/index.ts
 import { type SchemaTypeDefinition } from 'sanity'
 
-// documents
+// --- 1. DOKUMENTY (Hlavní sekce v menu) ---
 import site from './documents/site'
 import page from './documents/page'
 import globalModule from './documents/global-module'
@@ -8,8 +9,12 @@ import blogPost from './documents/blog.post'
 import blogCategory from './documents/blog.category'
 import navigation from './documents/navigation'
 import redirect from './documents/redirect'
+import concert from './documents/concert'
+import musicPiece from './documents/musicPiece'
+import news from './documents/news'
+import gallery from './documents/gallery' // <-- DŮLEŽITÉ: Náš nový dokument pro fotky
 
-// miscellaneous
+// --- 2. MISCELLANEOUS (Doplňky) ---
 import announcement from './misc/announcement'
 import logo from './misc/logo'
 import person from './misc/person'
@@ -17,7 +22,7 @@ import pricing from './misc/pricing'
 import reputation from './misc/reputation'
 import testimonial from './misc/testimonial'
 
-// objects
+// --- 3. OBJEKTY (Stavební kameny) ---
 import cta from './objects/cta'
 import icon from './objects/icon'
 import img from './objects/img'
@@ -26,7 +31,9 @@ import linkList from './objects/link.list'
 import metadata from './objects/metadata'
 import moduleOptions from './objects/module-options'
 
-// modules
+// --- 4. MODULY (Sekce do stránek / Page Builder) ---
+import concertListModule from './modules/concert-list-module'
+import heroModule from './modules/hero-module'
 import accordionList from './modules/accordion-list'
 import blogFrontpage from './modules/blog-frontpage'
 import blogList from './modules/blog-list'
@@ -51,26 +58,33 @@ import stepList from './modules/step-list'
 import tabbedContent from './modules/tabbed-content'
 import testimonialFeatured from './modules/testimonial.featured'
 import testimonialList from './modules/testimonial-list'
+import galleryModule from './modules/gallery-module'
+import galleryArchiveModule from './modules/gallery-archive-module'
 
+// --- FINÁLNÍ EXPORT ---
 export const schemaTypes: SchemaTypeDefinition[] = [
-	// documents
+	// Hlavní dokumenty
 	site,
 	page,
 	globalModule,
 	blogPost,
 	blogCategory,
 	navigation,
-
-	// miscellaneous
-	announcement,
 	redirect,
+	concert,
+	musicPiece,
+	news,
+	gallery, // <-- ZDE: Registrace dokumentu Galerie
+
+	// Ostatní
+	announcement,
 	logo,
 	person,
 	pricing,
 	reputation,
 	testimonial,
 
-	// objects
+	// Objekty
 	cta,
 	icon,
 	img,
@@ -79,7 +93,9 @@ export const schemaTypes: SchemaTypeDefinition[] = [
 	metadata,
 	moduleOptions,
 
-	// modules
+	// Všechny moduly pro Page Builder
+	concertListModule,
+	heroModule,
 	accordionList,
 	blogFrontpage,
 	blogList,
@@ -104,4 +120,6 @@ export const schemaTypes: SchemaTypeDefinition[] = [
 	tabbedContent,
 	testimonialFeatured,
 	testimonialList,
+	galleryModule,
+	galleryArchiveModule,
 ]

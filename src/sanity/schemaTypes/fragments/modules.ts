@@ -29,6 +29,10 @@ export default defineField({
 		{ type: 'tabbed-content' },
 		{ type: 'testimonial-list' },
 		{ type: 'testimonial.featured' },
+		{ type: 'concert-list-module' }, // náš dříve přidaný modul
+		{ type: 'hero-module' },
+		{ type: 'gallery-archive-module' },
+		{ type: 'gallery-module' } // <-- PŘIDAT ZDE NOVÝ TYP
 	],
 	options: {
 		insertMenu: {
@@ -41,6 +45,11 @@ export default defineField({
 				{ name: 'list' },
 			],
 			groups: [
+				{
+					name: 'choir',
+					title: 'Sbor',
+					of: ['hero-module', 'concert-list-module'], // Teď budou mít v Sanity vlastní záložku
+				},
 				{
 					name: 'blog',
 					of: ['blog-frontpage', 'blog-list', 'blog-post-content'],

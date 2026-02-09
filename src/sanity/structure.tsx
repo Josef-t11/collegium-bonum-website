@@ -1,9 +1,13 @@
-import { structureTool } from 'sanity/structure'
+// src/sanity/structure.tsx
+
+import { StructureBuilder, structureTool } from 'sanity/structure'
 import { singleton, group, directory } from './lib/builders'
-import { VscFiles, VscServerProcess } from 'react-icons/vsc'
+// Přidali jsme VscFolderLibrary pro galerii
+import { VscFiles, VscServerProcess, VscMegaphone, VscEdit, VscLibrary, VscFolderLibrary } from 'react-icons/vsc'
+import { GoPerson } from 'react-icons/go'
 
 export const structure = structureTool({
-	structure: (S) =>
+	structure: (S: StructureBuilder) =>
 		S.list()
 			.title('Content')
 			.items([
@@ -11,7 +15,18 @@ export const structure = structureTool({
 				S.divider(),
 
 				S.documentTypeListItem('page').title('All pages').icon(VscFiles),
-				// customize page directories
+				S.documentTypeListItem('concert').title('Koncerty').icon(VscMegaphone),
+				S.documentTypeListItem('news').title('Aktuality').icon(VscEdit),
+
+				// --- NOVÁ POLOŽKA: Fotogalerie ---
+				S.documentTypeListItem('gallery').title('Fotogalerie').icon(VscFolderLibrary),
+				// ---------------------------------
+
+				S.documentTypeListItem('musicPiece').title('Repertoár').icon(VscLibrary),
+				S.documentTypeListItem('person').title('Lidé a autoři').icon(GoPerson),
+
+				S.divider(),
+
 				group(S, 'Directories', [
 					directory(S, 'docs', { maxLevel: 1 }).title('Docs'),
 					directory(S, 'docs/modules').title('Docs › Modules'),
@@ -30,7 +45,6 @@ export const structure = structureTool({
 				group(S, 'Miscellaneous', [
 					S.documentTypeListItem('announcement').title('Announcements'),
 					S.documentTypeListItem('logo').title('Logos'),
-					S.documentTypeListItem('person').title('People'),
 					S.documentTypeListItem('pricing').title('Pricing tiers'),
 					S.documentTypeListItem('reputation'),
 					S.documentTypeListItem('testimonial').title('Testimonials'),

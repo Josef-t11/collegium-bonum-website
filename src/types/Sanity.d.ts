@@ -26,6 +26,51 @@ declare global {
 			items?: (Link | LinkList)[]
 		}
 
+		// --- CHOIR SPECIFIC TYPES ---
+
+		interface MusicPiece extends SanityDocument {
+			_id: string;
+			title: string;
+			composer?: string;
+			category?: 'sacred' | 'folk' | 'christmas' | 'other';
+			learnedAt?: string;
+		}
+
+		interface Concert extends SanityDocument {
+			readonly _type: 'concert';
+			_id: string;
+			title: string;
+			slug: { current: string };
+			dateAndTime: string;
+			location?: string;
+			description?: any[];
+			posterImage?: any;
+			program?: MusicPiece[];
+			isPublic: boolean;
+			poster?: string;
+		}
+
+		interface News extends SanityDocument {
+			readonly _type: 'news';
+			_id: string;
+			title: string;
+			slug: { current: string };
+			publishDate: string;
+			content: any[];
+			author?: Person;
+			metadata?: Metadata;
+		}
+
+		interface Person extends SanityDocument {
+			name: string
+			slug: { current: string }
+			title?: string
+			image?: Image
+			bio?: any[] // PortableText array
+		}
+
+		// --- END CHOIR SPECIFIC TYPES ---
+
 		// pages
 
 		interface PageBase extends SanityDocument {
@@ -38,6 +83,16 @@ declare global {
 			readonly _type: 'page'
 			modules?: Module[]
 		}
+
+		interface HeroModule extends Module<'hero-module'> {
+			title: string;
+			subtitle?: string;
+			image?: Image;
+			cta?: CTA;
+		}
+
+		// --- UNION TYPE FOR DYNAMIC ROUTING (UPDATED TO INCLUDE News) ---
+		type SanityContent = Page | Concert | News;
 
 		interface Translation {
 			slug: string
@@ -207,4 +262,4 @@ declare global {
 	}
 }
 
-export {}
+export { }

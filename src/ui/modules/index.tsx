@@ -1,3 +1,5 @@
+// src/ui/modules/index.tsx
+
 import AccordionList from './AccordionList'
 import BlogFrontpage from './blog/BlogFrontpage'
 import BlogList from './blog/BlogList'
@@ -19,10 +21,16 @@ import StepList from './StepList'
 import TabbedContent from './TabbedContent'
 import TestimonialList from './TestimonialList'
 import TestimonialFeatured from './TestimonialFeatured'
+import GalleryModule from './GalleryModule'
+import GalleryArchiveModule from './GalleryArchiveModule'
+
+// Nově přidaný modul pro koncerty
+import ConcertListModule from './ConcertListModule'
 
 import dynamic from 'next/dynamic'
 import { createDataAttribute } from 'next-sanity'
 
+// Definice komponent pro jednotlivé typy modulů ze Sanity
 const MODULE_MAP = {
 	'accordion-list': AccordionList,
 	'blog-frontpage': BlogFrontpage,
@@ -34,7 +42,6 @@ const MODULE_MAP = {
 	'creative-module': dynamic(() => import('./CreativeModule')),
 	'custom-html': CustomHTML,
 	'flag-list': FlagList,
-	hero: Hero,
 	'hero.split': HeroSplit,
 	'hero.saas': HeroSaaS,
 	'logo-list': LogoList,
@@ -48,6 +55,13 @@ const MODULE_MAP = {
 	'tabbed-content': TabbedContent,
 	'testimonial-list': TestimonialList,
 	'testimonial.featured': TestimonialFeatured,
+	'gallery-module': GalleryModule,
+	'gallery-archive-module': GalleryArchiveModule,
+
+	// Specifické moduly pro sbor (přesně podle typů v Sanity)
+	'hero': Hero,
+	'hero-module': Hero,
+	'concert-list-module': ConcertListModule,
 } as const
 
 export default function Modules({
@@ -75,9 +89,13 @@ export default function Modules({
 			{modules?.map((module) => {
 				if (!module) return null
 
-				const Component = MODULE_MAP[module._type as keyof typeof MODULE_MAP]
+				// Výběr komponenty podle typu ze Sanity
+				const Component = MODULE_MAP[module._type as keyof typeof MODULE_MAP] as any
 
-				if (!Component) return null
+				if (!Component) {
+					console.warn(`Module component for type "${module._type}" not found.`);
+					return null
+				}
 
 				return (
 					<Component

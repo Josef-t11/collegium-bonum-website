@@ -1,16 +1,15 @@
+// src/sanity/lib/queries.ts
+
 import { fetchSanityLive } from './fetch'
 import { groq } from 'next-sanity'
 import errors from '@/lib/errors'
 import { BLOG_DIR } from '@/lib/env'
 
-export const LINK_QUERY = groq`
-	...,
-	internal->{
-		_type,
-		title,
-		metadata
-	}
-`
+// --- ZÁKLADNÍ FRAGMENTY ---
+export const LINK_QUERY = groq`..., internal->{ _type, title, "slug": metadata.slug.current }`
+export const IMAGE_QUERY = groq`..., 'lqip': @.asset->metadata.lqip`
+export const CTA_QUERY = groq`..., link{ ${LINK_QUERY} }`
+export const REPUTATION_QUERY = groq`_type == 'reputation-block' => { reputation-> }`
 
 const NAVIGATION_QUERY = groq`
 	title,
@@ -21,165 +20,91 @@ const NAVIGATION_QUERY = groq`
 	}
 `
 
-export const IMAGE_QUERY = groq`
-	...,
-	'lqip': @.asset->metadata.lqip
+const MUSIC_PIECE_FIELDS = groq`
+  _id,
+  title,
+  "composer": coalesce(composer, author->name, author->title, author->fullName, "Anonym"),
+  category,
+  learnedAt
 `
 
-const ASSET_IMG_QUERY = groq`
-	...,
-	image { ${IMAGE_QUERY} }
+const CONCERT_CARD_FIELDS = groq`
+  _id,
+  title,
+  "slug": slug.current,
+  dateAndTime,
+  location,
+  description,
+  "poster": posterImage.asset->url
 `
 
-export const CTA_QUERY = groq`
-	...,
-	link{ ${LINK_QUERY} }
-`
-
-export const REPUTATION_QUERY = groq`
-	_type == 'reputation-block' => { reputation-> }
-`
-
+// --- MODULY ---
 export const MODULES_QUERY = groq`
 	...,
-	ctas[]{
-		...,
-		link{ ${LINK_QUERY} }
+	ctas[]{ ..., link{ ${LINK_QUERY} } },
+	_type == 'hero-module' => {
+		title, subtitle, "image": image.asset->url, cta { ${CTA_QUERY} }
 	},
-	_type == 'blog-list' => { filteredCategory-> },
-	_type == 'breadcrumbs' => { crumbs[]{ ${LINK_QUERY} } },
-	_type == 'callout' => {
-		content[]{
-			...,
-			${REPUTATION_QUERY}
-		}
+	_type == 'concert-list-module' => {
+		title, intro, filterType,
+		"concerts": *[_type == "concert" && isPublic == true && (
+			(filterType == "upcoming" && dateAndTime >= now()) ||
+			(filterType == "past" && dateAndTime < now()) ||
+			(!defined(filterType) || filterType == "all")
+		)] | order(dateAndTime asc) { ${CONCERT_CARD_FIELDS} }
 	},
-	_type == 'card-list' => {
-		cards[]{
-			...,
-			ctas[]{ ${CTA_QUERY} }
-		}
+	_type == 'gallery-module' => {
+		title,
+		images[]{ _key, caption, alt, "url": asset->url, "metadata": asset->metadata { lqip, dimensions } }
 	},
-	_type == 'creative-module' => {
-		modules[]{
-			...,
-			subModules[]{
-				...,
-				ctas[]{ ${CTA_QUERY} }
-			}
-		}
-	},
-	_type == 'hero' => {
-		content[]{
-			...,
-			${REPUTATION_QUERY}
-		},
-		assets[]{
-			...,
-			_type == 'img' => { ${ASSET_IMG_QUERY} }
-		}
-	},
-	_type == 'hero.saas' => {
-		content[]{
-			...,
-			${REPUTATION_QUERY}
-		},
-		assets[]{
-			...,
-			_type == 'img' => { ${ASSET_IMG_QUERY} }
-		}
-	},
-	_type == 'hero.split' => {
-		content[]{
-			...,
-			${REPUTATION_QUERY}
-		},
-		assets[]{
-			...,
-			_type == 'img' => { ${ASSET_IMG_QUERY} }
-		}
-	},
-	_type == 'logo-list' => { logos[]-> },
-	_type == 'person-list' => { people[]-> },
-	_type == 'pricing-list' => {
-		tiers[]->{
-			...,
-			ctas[]{ ${CTA_QUERY} }
+	_type == 'gallery-archive-module' => {
+		title,
+		"allGalleries": *[_type == "gallery"] | order(date desc) {
+			_id, title, "slug": slug.current, date, "mainImage": mainImage.asset->url, "imageCount": count(images)
 		}
 	},
 	_type == 'richtext-module' => {
-		content[]{
-			...,
-			_type == 'image' => { ${IMAGE_QUERY} }
-		},
-		'headings': select(
-			tableOfContents => content[style in ['h2', 'h3', 'h4', 'h5', 'h6']]{
-				style,
-				'text': pt::text(@)
-			}
-		),
-	},
-	_type == 'tabbed-content' => {
-		tabs[]{
-			...,
-			ctas[]{ ${CTA_QUERY} }
-		}
-	},
-	_type == 'testimonial.featured' => { testimonial-> },
-	_type == 'testimonial-list' => { testimonials[]-> },
-`
-
-export const GLOBAL_MODULE_PATH_QUERY = groq`
-	string::startsWith($slug, path)
-	&& select(
-		defined(excludePaths) => count(excludePaths[string::startsWith($slug, @)]) == 0,
-		true
-	)
-`
-
-export const TRANSLATIONS_QUERY = groq`
-	'translations': *[_type == 'translation.metadata' && references(^._id)].translations[].value->{
-		'slug': metadata.slug.current,
-		language
+		content[]{ ..., _type == 'image' => { ${IMAGE_QUERY} } }
 	}
 `
 
+// --- STRÁNKY (ROUTER) ---
+export const PAGE_OR_CONCERT_QUERY = groq`
+  *[
+    (metadata.slug.current == $slug || slug.current == $slug || (metadata.slug.current == "index" && $slug == "home") || (metadata.slug.current == "index" && $slug == "index")) 
+    && _type in ["page", "concert", "news"]
+  ][0] {
+    _id, _type, title,
+    _type == "page" => { modules[]{ ${MODULES_QUERY} }, metadata },
+    _type == "concert" => { dateAndTime, location, description, isPublic, "poster": posterImage.asset->url, program[]->{ ${MUSIC_PIECE_FIELDS} } },
+    _type == "news" => { publishDate, excerpt, content, "slug": slug.current }
+  }
+`
+
+export const REPERTOIRE_QUERY = groq`*[_type == "musicPiece"] | order(title asc) { ${MUSIC_PIECE_FIELDS}, category }`
+
+// OPRAVA: Pro Single Gallery nepoužijeme proměnnou v definici, pokud to zlobí, 
+// ale tady ji necháme a v page.tsx zajistíme, že tam VŽDY pošleme objekt s klíčem slug.
+export const SINGLE_GALLERY_QUERY = groq`
+  *[_type == "gallery" && slug.current == $slug][0] {
+    _id, title, date,
+    "images": images[]{ _key, caption, alt, "url": asset->url, "metadata": asset->metadata { lqip, dimensions } }
+  }
+`
+
+// --- API FUNKCE ---
 export async function getSite() {
-	const site = await fetchSanityLive<Sanity.Site>({
-		query: groq`
-			*[_type == 'site'][0]{
-				...,
-				ctas[]{ ${CTA_QUERY} },
-				headerMenu->{ ${NAVIGATION_QUERY} },
-				footerMenu->{ ${NAVIGATION_QUERY} },
-				social->{ ${NAVIGATION_QUERY} },
-				'ogimage': ogimage.asset->url
-			}
-		`,
+	return await fetchSanityLive<Sanity.Site>({
+		query: groq`*[_type == 'site'][0]{ ..., headerMenu->{ ${NAVIGATION_QUERY} }, footerMenu->{ ${NAVIGATION_QUERY} } }`,
 	})
-
-	if (!site) throw new Error(errors.missingSiteSettings)
-
-	return site
 }
 
 export async function getTranslations() {
 	return await fetchSanityLive<Sanity.Translation[]>({
 		query: groq`*[_type in ['page', 'blog.post'] && defined(language)]{
-			'slug': '/' + select(
-				_type == 'blog.post' => '${BLOG_DIR}/' + metadata.slug.current,
-				metadata.slug.current != 'index' => metadata.slug.current,
-				''
-			),
+			'slug': '/' + select(_type == 'blog.post' => '${BLOG_DIR}/' + metadata.slug.current, metadata.slug.current != 'index' => metadata.slug.current, ''),
 			'translations': *[_type == 'translation.metadata' && references(^._id)].translations[].value->{
-				'slug': '/' + select(
-					_type == 'blog.post' => '${BLOG_DIR}/' + language + '/' + metadata.slug.current,
-					metadata.slug.current != 'index' => language + '/' + metadata.slug.current,
-					language
-				),
-				_type == 'blog.post' => {
-					'slugBlogAlt': '/' + language + '/${BLOG_DIR}/' + metadata.slug.current
-				},
+				'slug': '/' + select(_type == 'blog.post' => '${BLOG_DIR}/' + language + '/' + metadata.slug.current, metadata.slug.current != 'index' => language + '/' + metadata.slug.current, language),
 				language
 			}
 		}`,

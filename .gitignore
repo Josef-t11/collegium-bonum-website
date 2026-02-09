@@ -40,3 +40,18 @@ next-env.d.ts
 public/google*.html
 
 public/admin/static
+
+# migrace, fotky
+/migration
+/migrate.mjs
+
+# Backups and archives
+*.tar.gz
+*.zip
+
+# Logic/Prompt notes
+*.txt
+*.ps1
+/x/
+pom*
+script*

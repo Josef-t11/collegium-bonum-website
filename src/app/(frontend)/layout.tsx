@@ -1,39 +1,22 @@
-// import { GoogleTagManager } from '@next/third-parties/google'
-import Root from '@/ui/Root'
-import { NuqsAdapter } from 'nuqs/adapters/next/app'
-import SkipToContent from '@/ui/SkipToContent'
-import Announcement from '@/ui/Announcement'
-import Header from '@/ui/header'
-import Footer from '@/ui/footer'
-import VisualEditingControls from '@/ui/VisualEditingControls'
-import { Analytics } from '@vercel/analytics/react'
-import { SpeedInsights } from '@vercel/speed-insights/next'
+import Header from '@/components/Header'
+import Footer from '@/components/Footer'
 import '@/styles/app.css'
 
-export default async function RootLayout({
-	children,
-}: {
-	children: React.ReactNode
-}) {
-	return (
-		<Root>
-			{/* <GoogleTagManager gtmId="" /> */}
-			<body className="bg-canvas text-ink antialiased">
-				<NuqsAdapter>
-					<SkipToContent />
-					<Announcement />
-					<Header />
-					<main id="main-content" role="main" tabIndex={-1}>
-						{children}
-					</main>
-					<Footer />
+export default function RootLayout({ children }: { children: React.ReactNode }) {
+  return (
+    <html lang="cs">
+      <body className="antialiased min-h-screen flex flex-col bg-white text-slate-900">
+        {/* Naše nová hlavička */}
+        <Header />
 
-					<VisualEditingControls />
-				</NuqsAdapter>
+        {/* Hlavní obsah webu */}
+        <main id="main-content" className="flex-grow">
+          {children}
+        </main>
 
-				<Analytics />
-				<SpeedInsights />
-			</body>
-		</Root>
-	)
+        {/* Naše nová patička */}
+        <Footer />
+      </body>
+    </html>
+  )
 }

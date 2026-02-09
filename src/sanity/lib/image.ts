@@ -1,8 +1,15 @@
-import imageUrlBuilder from '@sanity/image-url'
+// src/sanity/lib/image.ts
+// Měníme 'import imageUrlBuilder from' na 'import createImageUrlBuilder from'
+import createImageUrlBuilder from '@sanity/image-url'
 import { client } from '@/sanity/lib/client'
 
-const builder = imageUrlBuilder(client)
+// Měníme název proměnné na 'imageBuilder' pro konzistenci
+const imageBuilder = createImageUrlBuilder(client)
 
-export function urlFor(image: Sanity.Image) {
-	return builder.image(image)
+export function urlFor(image: any) {
+	// Ochrana pro "operáka": pokud image nemá asset, nepadáme, vrátíme prázdný objekt
+	if (!image || !image.asset) {
+		return { url: () => '' }
+	}
+	return imageBuilder.image(image)
 }

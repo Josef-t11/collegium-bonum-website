@@ -1,109 +1,61 @@
-import moduleProps from '@/lib/moduleProps'
-import { ResponsiveImg } from '@/ui/Img'
-import { PortableText, stegaClean } from 'next-sanity'
-import CTAList from '@/ui/CTAList'
-import Pretitle from '@/ui/Pretitle'
-import CustomHTML from './CustomHTML'
-import Reputation from '@/ui/Reputation'
-import { cn } from '@/lib/utils'
+// src/ui/modules/Hero.tsx
+import React from 'react'
 
-export default function Hero({
-	pretitle,
-	content,
-	ctas,
-	assets,
-	textAlign: ta = 'center',
-	alignItems: ai,
-	...props
-}: Partial<{
-	pretitle: string
-	content: any
-	ctas: Sanity.CTA[]
-	assets: Sanity.Img[]
-	textAlign: React.CSSProperties['textAlign']
-	alignItems: React.CSSProperties['alignItems']
-}> &
-	Sanity.Module) {
-	const hasImage = !!assets?.[0]
-	const asset = assets?.[0]
+interface HeroProps {
+	title: string
+	subtitle?: string
+	image?: any
+	cta?: {
+		link?: {
+			label?: string
+			external?: string
+			params?: string
+		}
+	}
+}
 
-	const textAlign = stegaClean(ta)
-	const alignItems = stegaClean(ai)
+export default function Hero({ title, subtitle, image, cta }: HeroProps) {
+	// 1. Získání URL obrázku (podpora pro namapovaný string z GROQ i Sanity objekt)
+	const imageUrl = typeof image === 'string' ? image : image?.asset?.url
 
 	return (
-		<section
-			className={cn(
-				hasImage &&
-					'bg-ink text-canvas grid overflow-hidden *:col-span-full *:row-span-full',
-			)}
-			{...moduleProps(props)}
-		>
-			{hasImage && (
-				<ResponsiveImg
-					img={asset}
-					className="max-h-fold size-full object-cover"
-					width={2400}
-					draggable={false}
-				/>
-			)}
-
-			{content && (
-				<div className="section flex w-full flex-col text-balance">
-					<div
-						className={cn(
-							'richtext headings:text-balance relative isolate max-w-xl',
-							hasImage && 'text-shadow',
-							{
-								'mb-8': alignItems === 'start',
-								'my-auto': alignItems === 'center',
-								'mt-auto': alignItems === 'end',
-								'me-auto': ['left', 'start'].includes(textAlign),
-								'mx-auto': textAlign === 'center',
-								'ms-auto': ['right', 'end'].includes(textAlign),
-							},
-						)}
-						style={{ textAlign }}
-					>
-						<Pretitle className={cn(hasImage && 'text-canvas/70')}>
-							{pretitle}
-						</Pretitle>
-
-						<PortableText
-							value={content}
-							components={{
-								types: {
-									'custom-html': ({ value }) => <CustomHTML {...value} />,
-									'reputation-block': ({ value }) => (
-										<Reputation
-											className={cn(
-												'!mt-4',
-												hasImage && '[&_strong]:text-amber-400',
-												{
-													'justify-start': ['left', 'start'].includes(
-														textAlign,
-													),
-													'justify-center': textAlign === 'center',
-													'justify-end': ['right', 'end'].includes(textAlign),
-												},
-											)}
-											reputation={value.reputation}
-										/>
-									),
-								},
-							}}
-						/>
-
-						<CTAList
-							ctas={ctas}
-							className={cn('!mt-4', {
-								'justify-start': textAlign === 'left',
-								'justify-center': textAlign === 'center',
-								'justify-end': textAlign === 'right',
-							})}
-						/>
-					</div>
+		<section className="relative h-[70vh] min-h-[500px] w-full overflow-hidden bg-slate-900 flex items-center">
+			{/* Obrázek na pozadí */}
+			{imageUrl && (
+				<div className="absolute inset-0 z-0">
+					<img
+						src={imageUrl}
+						alt={title || 'Background'}
+						loading="eager"
+						className="h-full w-full object-cover opacity-60"
+					/>
+					{/* Gradient pro čitelnost textu */}
+					<div className="absolute inset-0 bg-gradient-to-r from-slate-900 via-slate-900/40 to-transparent" />
 				</div>
 			)}
+
+			{/* Obsah - Bílý text na tmavém podkladu */}
+			<div className="container mx-auto px-6 relative z-10 text-white max-w-4xl">
+				<h1 className="text-5xl md:text-7xl font-black tracking-tight mb-6 leading-[1.1]">
+					{title}
+				</h1>
+
+				{subtitle && (
+					<p className="text-xl md:text-2xl text-slate-200 mb-8 max-w-2xl leading-relaxed">
+						{subtitle}
+					</p>
+				)}
+
+				{/* Tlačítko (CTA) */}
+				{cta?.link?.label && (
+					<a
+						href={cta.link.external || cta.link.params || '#'}
+						className="inline-block bg-blue-600 hover:bg-blue-700 text-white px-8 py-4 rounded-full font-bold text-lg transition-all shadow-lg hover:scale-105 active:scale-95"
+					>
+						{cta.link.label}
+					</a>
+				)}
+			</div>
 		</section>
 	)
 }
