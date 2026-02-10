@@ -19,7 +19,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         */}
         {isProd && (
           <Script
-            src="https://3.72.17.221:9999/jstag/managed/91b8351a-a548-41e3-9264-d812de972a98/7d27cfa50eba15b9_complete.js"
+            type="text/javascript" src="https://dok.js-cdn.dynatrace.com/jstag/193010ae318/bf76321nss/3da99c1a43a50125_complete.js"
             strategy="afterInteractive"
             crossOrigin="anonymous"
           />
