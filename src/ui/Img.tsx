@@ -93,15 +93,15 @@ function generateSrc(
 	const w_calc = !!w // if width is provided
 		? Number(w)
 		: // if height is provided, calculate width
-			!!h && Math.floor((Number(h) * w_orig) / h_orig)
+		!!h && Math.floor((Number(h) * w_orig) / h_orig)
 
 	const h_calc = !!h // if height is provided
 		? Number(h)
 		: // if width is provided, calculate height
-			!!w && Math.floor((Number(w) * h_orig) / w_orig)
+		!!w && Math.floor((Number(w) * h_orig) / w_orig)
 
 	return {
-		src: urlFor(image)
+		src: (urlFor(image) as any) // <-- PŘIDEJTE ( ... as any)
 			.withOptions({
 				width: !!w ? Number(w) : undefined,
 				height: !!h ? Number(h) : undefined,
