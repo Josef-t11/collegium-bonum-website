@@ -200,6 +200,20 @@ export const SINGLE_GALLERY_QUERY = groq`
     }
   }
 `
+// --- QUERY PRO DETAIL KONCERTU (Chybělo pro build) ---
+export const CONCERT_DETAIL_QUERY = groq`
+  *[_type == "concert" && slug.current == $slug][0] {
+    _id,
+    _type,
+    title,
+    dateAndTime,
+    location,
+    description,
+    isPublic,
+    "poster": posterImage.asset->url,
+    program[]->{ ${MUSIC_PIECE_FIELDS} }
+  }
+`
 
 // --- API FUNKCE ---
 

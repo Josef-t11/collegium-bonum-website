@@ -1,7 +1,11 @@
+import { CONCERT_DETAIL_QUERY } from '@/sanity/lib/queries'
+// ... ostatní importy
 import { client } from '@/sanity/lib/client'
 import { groq } from 'next-sanity'
 import { notFound } from 'next/navigation'
 import PortableTextComponent from '@/components/PortableTextComponent'
+
+
 
 const ALL_CONCERTS_QUERY = groq`*[_type == "concert" && isPublic == true] | order(dateAndTime asc) {
   _id,
@@ -24,7 +28,7 @@ type Props = {
 export default async function ConcertDetailPage({ params }: Props) {
   // KROK 1: Musíme počkat na params (Next.js 15 specifické)
   const { slug } = await params
-  
+
   // KROK 2: Načtení dat ze Sanity
   const concert = await client.fetch(CONCERT_DETAIL_QUERY, { slug })
 
@@ -41,23 +45,23 @@ export default async function ConcertDetailPage({ params }: Props) {
         {/* Plakát */}
         {concert.poster && (
           <div className="w-full md:w-1/3">
-            <img 
-              src={concert.poster} 
-              alt={concert.title} 
-              className="rounded-2xl shadow-2xl w-full sticky top-8" 
+            <img
+              src={concert.poster}
+              alt={concert.title}
+              className="rounded-2xl shadow-2xl w-full sticky top-8"
             />
           </div>
         )}
 
         <div className="flex-1">
           <nav className="mb-6">
-             <a href="/koncerty" className="text-sm font-bold text-blue-600 hover:underline">← Zpět na seznam</a>
+            <a href="/koncerty" className="text-sm font-bold text-blue-600 hover:underline">← Zpět na seznam</a>
           </nav>
-          
+
           <h1 className="text-5xl font-black text-gray-900 mb-6 leading-tight">
             {concert.title}
           </h1>
-          
+
           <div className="space-y-3 text-lg text-gray-600 mb-8">
             <div className="flex items-center gap-3">
               <span className="font-bold text-gray-900">Kdy:</span>
