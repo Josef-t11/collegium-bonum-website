@@ -56,6 +56,9 @@ const MUSIC_PIECE_FIELDS = groq`
     author->fullName,
     "Anonym"
   ),
+	  // Přidáme kontrolu na biografii
+  "composerSlug": author->slug.current,
+  "hasBio": defined(author->bio),
   category,
   learnedAt
 `
