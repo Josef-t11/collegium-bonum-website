@@ -1,0 +1,130 @@
+// src/app/(frontend)/interni/page.tsx
+import { auth } from "@/auth"
+import { client } from "@/sanity/lib/client"
+import { UPCOMING_REHEARSALS_QUERY } from "@/sanity/lib/queries"
+import Link from "next/link"
+import { Calendar, MapPin, Info, Music } from "lucide-react"
+
+export default async function InterniDashboard() {
+	const session = await auth()
+
+	// Fetch dat bez cache pro okamžité promítnutí změn (revalidate: 0)
+	const rehearsals = await client.fetch(
+		UPCOMING_REHEARSALS_QUERY,
+		{},
+		{ next: { revalidate: 0 } }
+	)
+	console.log("PRVNÍ ZKOUŠKA DATA:", rehearsals[0]);
+
+	return (
+		<div className="max-w-6xl mx-auto py-12 px-6">
+			{/* UVÍTÁNÍ */}
+			<header className="mb-12">
+				<h1 className="text-3xl font-black text-slate-900 tracking-tight">
+					Ahoj, {session?.user?.name || 'člene sboru'}! 👋
+				</h1>
+				<p className="text-blue-600 font-bold uppercase tracking-widest text-[10px] mt-2 bg-blue-50 inline-block px-2 py-1 rounded-md">
+					Role: {session?.user?.role === 'admin' ? 'Sbormistr / Archivář' : 'Člen sboru'}
+				</p>
+			</header>
+
+			<div className="grid lg:grid-cols-3 gap-8">
+
+				{/* LEVÝ SLOUPEC: KALENDÁŘ (2/3 šířky) */}
+				<div className="lg:col-span-2 space-y-6">
+					<h2 className="text-2xl font-black text-slate-900 flex items-center gap-3">
+						<Calendar className="text-blue-600" /> Nejbližší zkoušky
+					</h2>
+
+					{rehearsals && rehearsals.length > 0 ? (
+						<div className="space-y-4">
+							{rehearsals.map((r: any) => {
+								const isCancelled = r.isCancelled === true;
+
+								return (
+									<div
+										key={r._id}
+										className={`relative bg-white p-6 rounded-3xl border transition-all flex flex-col md:flex-row md:items-center justify-between gap-6 ${isCancelled
+											? 'border-red-200 bg-red-50/40 shadow-inner'
+											: 'border-slate-200 shadow-sm'
+											}`}
+									>
+										<div className="flex items-center gap-4">
+											{/* DATUM BOX */}
+											<div className={`${isCancelled ? 'bg-red-600' : 'bg-slate-900'} text-white p-3 rounded-2xl text-center min-w-[70px] shadow-sm`}>
+												<span className="block text-xs uppercase font-bold text-white/60">
+													{new Date(r.dateAndTime).toLocaleDateString('cs-CZ', { month: 'short' })}
+												</span>
+												<span className="text-xl font-black">
+													{new Date(r.dateAndTime).getDate()}
+												</span>
+											</div>
+
+											{/* INFO O ZKOUŠCE */}
+											<div>
+												<div className="flex items-center gap-2 flex-wrap">
+													<h3 className={`font-bold text-lg ${isCancelled ? 'text-red-900' : 'text-slate-900'}`}>
+														{r.title}
+													</h3>
+													{isCancelled && (
+														<span className="bg-red-600 text-white text-[10px] font-black px-2 py-0.5 rounded-lg uppercase tracking-wider animate-pulse">
+															Odpadá / Zrušeno!
+														</span>
+													)}
+												</div>
+												<div className={`flex flex-wrap gap-x-4 gap-y-1 text-sm mt-1 ${isCancelled ? 'text-red-400' : 'text-slate-500'}`}>
+													<span className={`flex items-center gap-1 ${isCancelled ? 'line-through opacity-50' : ''}`}>
+														<MapPin size={14} /> {r.location}
+													</span>
+													<span className={`font-bold ${isCancelled ? 'line-through opacity-50' : 'text-blue-600'}`}>
+														{new Date(r.dateAndTime).toLocaleTimeString('cs-CZ', { hour: '2-digit', minute: '2-digit' })}
+													</span>
+												</div>
+											</div>
+										</div>
+
+										{/* POZNÁMKA - Vždy viditelná a výraznější */}
+										{r.notes && (
+											<div className={`p-4 rounded-2xl flex items-start gap-3 md:max-w-[280px] w-full border ${isCancelled
+												? 'bg-red-100 border-red-200 text-red-900'
+												: 'bg-blue-50 border-blue-100 text-blue-900'
+												}`}>
+												<Info size={18} className={`${isCancelled ? 'text-red-600' : 'text-blue-600'} mt-0.5 flex-shrink-0`} />
+												<div>
+													<p className="text-[10px] font-black uppercase tracking-widest opacity-60 mb-1">
+														Důležité:
+													</p>
+													<p className="text-sm font-medium leading-tight">
+														{r.notes}
+													</p>
+												</div>
+											</div>
+										)}
+									</div>
+								);
+							})}
+						</div>
+					) : (
+						<div className="p-10 bg-white rounded-3xl border border-dashed border-slate-200 text-slate-400 text-center font-medium">
+							Aktuálně nejsou naplánované žádné další zkoušky.
+						</div>
+					)}
+				</div>
+
+				{/* PRAVÝ SLOUPEC: RYCHLÉ ODKAZY */}
+				<div className="space-y-6">
+					<h2 className="text-2xl font-black text-slate-900">Materiály</h2>
+					<Link href="/interni/noty" className="block group">
+						<div className="bg-blue-600 p-8 rounded-[2.5rem] text-white shadow-xl shadow-blue-200 hover:scale-[1.02] transition-transform duration-300">
+							<Music size={40} className="mb-4" />
+							<h3 className="text-xl font-bold mb-2">Notový archiv</h3>
+							<p className="text-blue-100 text-sm leading-relaxed">
+								Všechny skladby ke stažení v PDF a obrázcích.
+							</p>
+						</div>
+					</Link>
+				</div>
+			</div>
+		</div>
+	)
+}

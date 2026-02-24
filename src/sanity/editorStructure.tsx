@@ -1,6 +1,6 @@
 // src/sanity/editorStructure.tsx
 import { StructureBuilder } from 'sanity/structure'
-import { VscMegaphone, VscEdit, VscLibrary, VscFolderLibrary } from 'react-icons/vsc'
+import { VscCalendar, VscMegaphone, VscEdit, VscLibrary, VscFolderLibrary } from 'react-icons/vsc'
 import { GoPerson } from 'react-icons/go'
 
 // Exportujeme pouze funkci s logikou menu
@@ -17,6 +17,13 @@ const editorStructure = (S: StructureBuilder) =>
 
 			S.documentTypeListItem('musicPiece').title('Repertoár').icon(VscLibrary),
 			S.documentTypeListItem('person').title('Lidé a autoři').icon(GoPerson),
+			S.listItem()
+				.title('Plán zkoušek')
+				.icon(VscCalendar)
+				.child(
+					S.documentTypeList('rehearsal').title('Termíny zkoušek')
+				),
+
 		])
 
 export default editorStructure

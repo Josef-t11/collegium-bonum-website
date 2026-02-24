@@ -70,7 +70,14 @@ const CONCERT_CARD_FIELDS = groq`
   dateAndTime,
   location,
   description,
-  "poster": posterImage.asset->url
+  "poster": posterImage.asset->url,
+  "program": program[]->{
+    _id,
+    title,
+    "composer": coalesce(author->name, composer, "Anonym"),
+    "composerSlug": author->slug.current,
+    "hasBio": defined(author->bio)
+  }
 `
 
 // --- DEFINICE MODULŮ (Page Builder) ---
@@ -151,15 +158,15 @@ export const MODULES_QUERY = groq`
 
 export const PAGE_OR_CONCERT_QUERY = groq`
   *[
-    (metadata.slug.current == $slug || slug.current == $slug || (metadata.slug.current == "index" && $slug == "home") || (metadata.slug.current == "index" && $slug == "index")) 
+    (metadata.slug.current == $slug || slug.current == $slug || (metadata.slug.current == "index" && $slug == "home")) 
     && _type in ["page", "concert", "news"]
   ][0] {
     _id,
     _type,
     title,
+    metadata, // <--- EXTRÉMNĚ DŮLEŽITÉ: Metadata pro procesor
     _type == "page" => {
-      modules[]{ ${MODULES_QUERY} },
-      metadata
+      modules[]{ ${MODULES_QUERY} }
     },
     _type == "concert" => {
       dateAndTime,
@@ -167,7 +174,13 @@ export const PAGE_OR_CONCERT_QUERY = groq`
       description,
       isPublic,
       "poster": posterImage.asset->url,
-      program[]->{ ${MUSIC_PIECE_FIELDS} }
+      "program": program[]->{ 
+        _id, 
+        title, 
+        "composer": coalesce(author->name, composer, "Anonym"),
+        "composerSlug": author->slug.current,
+        "hasBio": defined(author->bio)
+      }
     },
     _type == "news" => {
       publishDate,
@@ -175,14 +188,6 @@ export const PAGE_OR_CONCERT_QUERY = groq`
       content,
       "slug": slug.current
     }
-  }
-`
-
-export const REPERTOIRE_QUERY = groq`
-  *[_type == "musicPiece"] | order(title asc) {
-    ${MUSIC_PIECE_FIELDS},
-    category,
-    learnedAt
   }
 `
 
@@ -203,6 +208,26 @@ export const SINGLE_GALLERY_QUERY = groq`
     }
   }
 `
+export const SHEET_MUSIC_QUERY = groq`
+  *[_type == "sheetMusic"] | order(title asc) {
+    _id,
+    title,
+    composer,
+    category,
+    "fileUrl": file.asset->url
+  }
+`
+// Tato query vytáhne 5 nejbližších zkoušek, které ještě nenastaly
+export const UPCOMING_REHEARSALS_QUERY = groq`
+  *[_type == "rehearsal" && dateAndTime >= now()] | order(dateAndTime asc)[0...5] {
+    _id,
+    title,
+    dateAndTime,
+    location,
+    notes,
+    isCancelled // PŘIDAT TENTO ŘÁDEK - 2
+  }
+`
 // --- QUERY PRO DETAIL KONCERTU (Chybělo pro build) ---
 export const CONCERT_DETAIL_QUERY = groq`
   *[_type == "concert" && slug.current == $slug][0] {
@@ -217,7 +242,45 @@ export const CONCERT_DETAIL_QUERY = groq`
     program[]->{ ${MUSIC_PIECE_FIELDS} }
   }
 `
+export const REPERTOIRE_QUERY = groq`
+  *[_type == "musicPiece"] | order(title asc) {
+    ${MUSIC_PIECE_FIELDS}
+  }
+`
 
+export const INTERNAL_TASKS_QUERY = groq`
+  *[_type == "eventTasklist"] | order(_createdAt desc) {
+    _id,
+    title,
+    "eventName": relatedEvent->title,
+    "eventDate": relatedEvent->dateAndTime,
+    "internalEventDate": relatedEvent->date,
+    items[] {
+      _key,
+      type,
+      label,
+      isCompleted,
+      notes,
+      "assignee": assignedTo->name
+    }
+  }
+`
+
+export const DASHBOARD_TASKS_QUERY = groq`
+  *[_type == "eventTasklist"] | order(_createdAt desc)[0..1] {
+    _id,
+    title,
+    "eventName": relatedEvent->title,
+    items[0..2] { // Na dashboardu stačí první 3 úkoly jako náhled
+      _key,
+      type,
+      label,
+      isCompleted,
+      "assignee": assignedTo->name
+    },
+    "totalItems": count(items)
+  }
+`
 // --- API FUNKCE ---
 
 export async function getSite() {

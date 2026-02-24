@@ -26,24 +26,31 @@ import { supportedLanguages } from '@/lib/i18n'
 import { documentInternationalization } from '@sanity/document-internationalization'
 import { schemaTypes } from '@/sanity/schemaTypes'
 import resolveUrl from '@/lib/resolveUrl'
+import { DuplicateWithWeekAction } from './src/sanity/actions/DuplicateWithWeekAction'
+
 
 const singletonTypes = ['site']
 
+
 const sharedDocumentConfig = {
-	productionUrl: async (prev: any, { document }: any) => {
-		if (['page', 'blog.post'].includes(document?._type)) {
-			return resolveUrl(document as Sanity.PageBase, { base: true })
-		}
-		return prev
-	},
 	actions: (input: any[], { schemaType }: { schemaType: string }) => {
+		// 1. Logika pro Singletons (zachováváme tvůj původní kód)
+		let actions = input;
+
 		if (singletonTypes.includes(schemaType)) {
-			return input.filter(
+			actions = input.filter(
 				({ action }) =>
 					action && ['publish', 'discardChanges', 'restore'].includes(action),
 			)
 		}
-		return input
+
+		// 2. Rozšíření pro zkoušky (naše nová sborová logika)
+		// Pokud je to rehearsal, přidáme naše speciální tlačítko na konec seznamu
+		if (schemaType === 'rehearsal') {
+			return [...actions, DuplicateWithWeekAction]
+		}
+
+		return actions
 	},
 }
 
@@ -88,18 +95,20 @@ export default defineConfig([
 		document: sharedDocumentConfig,
 	},
 
+
+
 	// --- WORKSPACE 2: EDITOR ---
 	{
 		name: 'editor',
 		title: 'Sborista Editor',
-		icon,
+		icon, // Vaše ikona
 		projectId,
 		dataset,
 		basePath: '/editor',
 		plugins: [
 			structureTool({ structure: editorStructure }),
 			presentation,
-			codeInput(), // <--- PŘIDÁNO SEM (Tato řádka vyřeší vaše chyby)
+			codeInput(),
 			documentInternationalization({
 				supportedLanguages,
 				schemaTypes: ['page', 'blog.post'],
@@ -110,6 +119,7 @@ export default defineConfig([
 			templates: (templates) =>
 				templates.filter(({ schemaType }) => !singletonTypes.includes(schemaType)),
 		},
+		// Tady je ta změna!
 		document: sharedDocumentConfig,
 	}
 ])

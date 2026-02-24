@@ -1,5 +1,9 @@
 // src/sanity/schemaTypes/index.ts
+
 import { type SchemaTypeDefinition } from 'sanity'
+// 1. Importujeme naše RUČNĚ vytvořené modely (z předchozího kroku)
+import { user, account, verificationToken } from './objects/auth'
+
 
 // --- 1. DOKUMENTY (Hlavní sekce v menu) ---
 import site from './documents/site'
@@ -60,8 +64,15 @@ import testimonialFeatured from './modules/testimonial.featured'
 import testimonialList from './modules/testimonial-list'
 import galleryModule from './modules/gallery-module'
 import galleryArchiveModule from './modules/gallery-archive-module'
+import sheetMusic from './documents/sheetMusic'
+import rehearsal from './documents/rehearsal' // PŘIDAT
+import eventTask from './documents/eventTask'
+import internalEvent from './documents/internalEvent'
+import eventTasklist from './documents/eventTasklist'
+
 
 // --- FINÁLNÍ EXPORT ---
+
 export const schemaTypes: SchemaTypeDefinition[] = [
 	// Hlavní dokumenty
 	site,
@@ -75,6 +86,10 @@ export const schemaTypes: SchemaTypeDefinition[] = [
 	musicPiece,
 	news,
 	gallery, // <-- ZDE: Registrace dokumentu Galerie
+	sheetMusic,
+	rehearsal,
+	internalEvent,
+	eventTasklist,
 
 	// Ostatní
 	announcement,
@@ -83,7 +98,9 @@ export const schemaTypes: SchemaTypeDefinition[] = [
 	pricing,
 	reputation,
 	testimonial,
-
+	user,
+	account,
+	verificationToken,
 	// Objekty
 	cta,
 	icon,

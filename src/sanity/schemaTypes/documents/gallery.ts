@@ -9,6 +9,12 @@ export default defineType({
 	icon: ImagesIcon,
 	fields: [
 		defineField({
+			name: 'isPublic',
+			title: 'Veřejná galerie?',
+			type: 'boolean',
+			initialValue: false, // Bezpečnější výchozí stav
+		}),
+		defineField({
 			name: 'title',
 			title: 'Název akce',
 			type: 'string',

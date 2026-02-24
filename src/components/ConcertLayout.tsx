@@ -2,7 +2,7 @@
 
 import PortableTextComponent from './PortableTextComponent'
 import Link from 'next/link'
-import { Calendar, MapPin, ChevronLeft, Music } from 'lucide-react'
+import { Calendar, MapPin, ChevronLeft, Music, User } from 'lucide-react'
 
 interface ConcertLayoutProps {
 	data: Sanity.Concert
@@ -68,14 +68,29 @@ export default function ConcertLayout({ data }: ConcertLayoutProps) {
 									<h2 className="text-2xl font-bold text-slate-900">Program koncertu</h2>
 								</div>
 								<ul className="divide-y divide-slate-200">
+
 									{data.program.map((item: any) => (
 										<li key={item._id} className="py-4 first:pt-0 last:pb-0">
 											<p className="font-bold text-slate-900 text-lg">{item.title}</p>
-											{/* Teď už víme, že composer je text, protože jsme ho v query ošetřili */}
-											<p className="text-slate-500 font-medium">{item.composer}</p>
+
+											<div className="flex items-center gap-3">
+												<p className="text-slate-500 font-medium">{item.composer}</p>
+
+												{/* IMPLEMENTACE BIO LINKU V DETAILU */}
+												{/* MINIMALISTICKÝ BIO LINK */}
+												{item.hasBio && item.composerSlug && (
+													<Link
+														href={`/lide/${item.composerSlug}`}
+														className="inline-flex items-center gap-1 px-1.5 py-0.5 bg-slate-100 text-slate-500 rounded text-[9px] font-bold uppercase hover:bg-blue-600 hover:text-white transition-all"
+														title={`Více o autorovi: ${item.composer}`}
+													>
+														<User size={10} strokeWidth={2.5} />
+														Bio
+													</Link>
+												)}
+											</div>
 										</li>
 									))}
-
 								</ul>
 							</section>
 						)}

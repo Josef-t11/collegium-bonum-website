@@ -1,5 +1,5 @@
 // src/sanity/structure.tsx
-
+import { Music, Users, Calendar, ShieldCheck, Calendar1Icon, CalendarCheck } from 'lucide-react'
 import { StructureBuilder, structureTool } from 'sanity/structure'
 import { singleton, group, directory } from './lib/builders'
 // Přidali jsme VscFolderLibrary pro galerii
@@ -24,6 +24,35 @@ export const structure = structureTool({
 
 				S.documentTypeListItem('musicPiece').title('Repertoár').icon(VscLibrary),
 				S.documentTypeListItem('person').title('Lidé a autoři').icon(GoPerson),
+				S.divider(), // Hezký oddělovač
+
+				S.listItem()
+					.title('Sborové noty (Interní)')
+					.icon(Music)
+					.child(
+						S.documentTypeList('sheetMusic') // Musí odpovídat jménu v schématu
+							.title('Seznam not v archivu')
+					),
+				S.listItem()
+					.title('Plán zkoušek')
+					.icon(Calendar)
+					.child(
+						S.documentTypeList('rehearsal').title('Termíny zkoušek')
+					),
+				S.documentTypeListItem('internalEvent')
+					.title('Interní akce')
+					.icon(CalendarCheck),
+				S.documentTypeListItem('eventTasklist')
+					.title('Organizace a úkoly')
+					.icon(Calendar1Icon),
+				// ... (v seznamu S.list().items([...]))
+				S.divider(),
+				S.listItem()
+					.title('Systém: Uživatelé')
+					.child(S.documentTypeList('user')),
+				S.listItem()
+					.title('Systém: Přihlašovací tokeny')
+					.child(S.documentTypeList('verification-token')),
 
 				S.divider(),
 

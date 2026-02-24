@@ -1,6 +1,7 @@
 // src/app/(frontend)/layout.tsx
 import Header from '@/components/Header'
 import Footer from '@/components/Footer'
+import { SessionProvider } from "next-auth/react" // 1. IMPORTUJEME vysílačku
 import Script from 'next/script' // Import pro optimalizované načítání skriptů
 import '@/styles/app.css'
 
@@ -24,17 +25,19 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             crossOrigin="anonymous"
           />
         )}
+        <SessionProvider>
 
-        {/* Naše nová hlavička */}
-        <Header />
+          {/* Naše nová hlavička */}
+          <Header />
 
-        {/* Hlavní obsah webu */}
-        <main id="main-content" className="flex-grow">
-          {children}
-        </main>
+          {/* Hlavní obsah webu */}
+          <main id="main-content" className="flex-grow">
+            {children}
+          </main>
 
-        {/* Naše nová patička */}
-        <Footer />
+          {/* Naše nová patička */}
+          <Footer />
+        </SessionProvider>
       </body>
     </html>
   )

@@ -1,33 +1,41 @@
 'use client'
 
 import React, { useState, useMemo } from 'react'
-import { ArrowUpDown, Search, Filter } from 'lucide-react'
+import { ArrowUpDown, Search } from 'lucide-react'
 
-export default function RepertoireTable({ items }: { items: any[] }) {
+export default function RepertoireTable({ items = [] }: { items: any[] }) {
 	const [search, setSearch] = useState('')
 	const [sortKey, setSortKey] = useState('title')
 	const [sortDir, setSortDir] = useState<'asc' | 'desc'>('asc')
 	const [filterCategory, setFilterCategory] = useState('all')
 
-	// 1. Získání unikátních kategorií pro filtr
+	// 1. Získání unikátních kategorií (DEFENZIVNĚ)
 	const categories = useMemo(() => {
-		const cats = new Set(items.map(i => i.category).filter(Boolean))
+		// Pokud items je null/undefined, použijeme prázdné pole
+		const safeItems = items || []
+		const cats = new Set(safeItems.map(i => i.category).filter(Boolean))
 		return ['all', ...Array.from(cats)]
 	}, [items])
 
-	// 2. Logika filtrování a řazení
+	// 2. Logika filtrování a řazení (DEFENZIVNĚ)
 	const filteredItems = useMemo(() => {
-		return items
+		const safeItems = items || [] // Pojistka č. 2
+
+		return safeItems
 			.filter(item => {
+				// Bezpečný přístup k vlastnostem pomocí optional chaining ?.
 				const matchesSearch =
-					item.title?.toLowerCase().includes(search.toLowerCase()) ||
-					item.composer?.toLowerCase().includes(search.toLowerCase())
+					(item.title?.toLowerCase() || '').includes(search.toLowerCase()) ||
+					(item.composer?.toLowerCase() || '').includes(search.toLowerCase())
+
 				const matchesCategory = filterCategory === 'all' || item.category === filterCategory
+
 				return matchesSearch && matchesCategory
 			})
 			.sort((a, b) => {
 				const valA = (a[sortKey] || '').toString().toLowerCase()
 				const valB = (b[sortKey] || '').toString().toLowerCase()
+
 				if (valA < valB) return sortDir === 'asc' ? -1 : 1
 				if (valA > valB) return sortDir === 'asc' ? 1 : -1
 				return 0
@@ -41,6 +49,15 @@ export default function RepertoireTable({ items }: { items: any[] }) {
 			setSortKey(key)
 			setSortDir('asc')
 		}
+	}
+
+	// Pokud nemáme vůbec žádná data (např. prázdné Sanity), ukážeme info
+	if (!items || items.length === 0) {
+		return (
+			<div className="p-12 text-center bg-slate-50 border border-dashed border-slate-200 rounded-xl">
+				<p className="text-slate-500">V repertoáru zatím nejsou žádné skladby.</p>
+			</div>
+		)
 	}
 
 	return (
@@ -65,7 +82,7 @@ export default function RepertoireTable({ items }: { items: any[] }) {
 					<select
 						value={filterCategory}
 						onChange={(e) => setFilterCategory(e.target.value)}
-						className="w-full px-4 py-2 border border-slate-200 rounded-lg outline-none"
+						className="w-full px-4 py-2 border border-slate-200 rounded-lg outline-none bg-white"
 					>
 						{categories.map(cat => (
 							<option key={cat} value={cat}>{cat === 'all' ? 'Všechny' : cat}</option>
@@ -75,7 +92,7 @@ export default function RepertoireTable({ items }: { items: any[] }) {
 			</div>
 
 			{/* Tabulka */}
-			<div className="overflow-x-auto border border-slate-200 rounded-xl shadow-sm">
+			<div className="overflow-x-auto border border-slate-200 rounded-xl shadow-sm bg-white">
 				<table className="w-full text-left border-collapse">
 					<thead>
 						<tr className="bg-slate-50 border-b border-slate-200">
@@ -107,7 +124,7 @@ export default function RepertoireTable({ items }: { items: any[] }) {
 					</tbody>
 				</table>
 				{filteredItems.length === 0 && (
-					<div className="p-12 text-center text-slate-400">
+					<div className="p-12 text-center text-slate-400 italic">
 						Nebyly nalezeny žádné skladby odpovídající zadání.
 					</div>
 				)}

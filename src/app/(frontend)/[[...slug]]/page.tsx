@@ -1,8 +1,10 @@
 // src/app/(frontend)/[[...slug]]/page.tsx
 
+import { Metadata } from 'next'
 import { client } from '@/sanity/lib/client'
 import { notFound } from 'next/navigation'
 import { PAGE_OR_CONCERT_QUERY } from '@/sanity/lib/queries'
+import processMetadata from '@/lib/processMetadata' // Import tvé existující funkce
 
 import ConcertLayout from '@/components/ConcertLayout'
 import NewsLayout from '@/components/NewsLayout'
@@ -15,34 +17,38 @@ type PageData =
 	| (Sanity.Concert & { _type: 'concert' })
 	| (Sanity.News & { _type: 'news' });
 
+interface Props {
+	params: Promise<{ slug?: string[] }>
+}
+
 interface DynamicPageProps {
 	params: Promise<{ slug?: string[] }>
 }
 
-export default async function DynamicPage({ params }: DynamicPageProps) {
-	const resolvedParams = await params;
-	// Pokud slug chybí (jsme na homepage), Next.js pošle 'index'
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
+	const resolvedParams = await params
 	const slug = resolvedParams.slug?.join('/') || 'index'
 
-	// --- DIAGNOSTIKA (Uvidíte v terminálu, kde běží npm run dev) ---
-	console.log("-----------------------------------------");
-	console.log("🔍 Hledám v Sanity slug:", slug);
+	const data = await client.fetch<any>(PAGE_OR_CONCERT_QUERY, { slug })
 
-	const data = await client.fetch<PageData | null>(
-		PAGE_OR_CONCERT_QUERY,
-		{ slug }
-	);
+	// Pokud data nemáme, Next.js použije výchozí metadata z root layoutu
+	if (!data || !data.metadata) return {}
 
-	if (!data) {
-		console.log("❌ Data pro tento slug nebyla nalezena (null)");
-		console.log("-----------------------------------------");
-		return notFound()
-	}
+	// Voláme tvůj existující procesor
+	return processMetadata(data)
+}
 
-	console.log("✅ Data nalezena, typ dokumentu:", data._type);
-	console.log("-----------------------------------------");
-	// ---------------------------------------------------------------
 
+// --- RENDER STRÁNKY ---
+export default async function DynamicPage({ params }: Props) {
+	const resolvedParams = await params
+	const slug = resolvedParams.slug?.join('/') || 'index'
+
+	const data = await client.fetch<any>(PAGE_OR_CONCERT_QUERY, { slug })
+
+	if (!data) return notFound()
+
+	// Ochrana soukromých koncertů (Ops: raději 404 než leak dat)
 	if (data._type === 'concert' && data.isPublic === false) {
 		return notFound()
 	}
