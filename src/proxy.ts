@@ -11,15 +11,21 @@ const { auth: edgeAuth } = NextAuth(authConfig)
 export default async function proxy(request: NextRequest) {
 	const { pathname } = request.nextUrl
 
-	// --- 0. OCHRANA PROTI DIAKRITICE ---
+	// --- 0. EXTRÉMNÍ POJISTKA PRO AUTH API ---
+	// Pokud jde o vnitřní cesty Auth.js, middleware do toho nesmí zasahovat
+	if (pathname.startsWith('/api/auth') || pathname.startsWith('/prihlaseni')) {
+		return NextResponse.next()
+	}
+
+	// --- 1. OCHRANA PROTI DIAKRITICE ---
 	if (pathname.includes('%C3%AD')) {
 		const cleanPath = pathname.replace('intern%C3%AD', 'interni')
 		return NextResponse.redirect(new URL(cleanPath, request.url))
 	}
 
-	// --- 1. AUTH PROTECTION ---
+	// --- 2. AUTH PROTECTION ---
 	if (pathname.startsWith('/interni')) {
-		const session = await edgeAuth() // Tady voláme tu lehkou verzi bez SanityAdaptéru
+		const session = await edgeAuth()
 		if (!session) {
 			const loginUrl = new URL('/prihlaseni', request.url)
 			loginUrl.searchParams.set('callbackUrl', pathname)
